@@ -11,7 +11,6 @@ from functions import *
 
 import math
 
-
 df = startSel()
 pr = startPSet(df)
 
@@ -23,7 +22,7 @@ if sizeVal>df.shape[0] :
     raise ("size exceeds range of data")
     
 X = np.zeros((sizeVal,sizeVal))
-
+XChange = np.ones((sizeVal,sizeVal), dtype=bool)
 
 equation = pr.equ
 
@@ -37,42 +36,49 @@ maxY = getMax(df[pr.s].tolist()[1:])
 minG = getMin(df[pr.x].tolist()[1:])
 maxG = getMax(df[pr.x].tolist()[1:])
 
-
-#For the data I am using, this is makes things better
-maxG = 6
-minY = 1.5
-
-
 #overestimates number of bins
 numBin = int(round((maxG - minG)/0.25))
 
+#For the data I am using, this makes things better
+# Will incorporate into UI later
+maxG = 4.5
+minG = 2
+minY = 1.9
+maxY = 4.5
+
 numOfData = int((df.shape[0]-1))
 
-listPoints =  seperateLists(df[pr.s].tolist()[1:], numOfData, numBin) 
+# if numBin> sizeVal : numBin = sizeVal
 
+listPoints =  seperateLists(df[pr.s].tolist()[1:], numOfData, numBin) 
 
 for i in range(numBin) :
     if listPoints[i] == 0:
         numBin = i+1
         break
 
-
 refiguredList = buildList(df[pr.s].tolist()[1:],df[pr.x].tolist()[1:],df[pr.c1].tolist()[1:],listPoints,numOfData)
 
 print (refiguredList)
-
-
 
 usedPosit = np.zeros((pow(sizeVal,2), 3))
 
 positCount = 0
 
 
-#Simpy, this serves as the mapping process.
+#Simply, this serves as the mapping process.
 #Assigns color value to location in graph. 
 for i in range(numOfData) :
     xVal = refiguredList[i][1]
     yVal = refiguredList[i][0]
+
+    
+
+    if xVal < minG : continue
+    if yVal < minY: continue
+    if xVal > maxG : continue
+    if yVal > maxY: continue
+
     xVal-=minG
     yVal-=minY
     percentX = xVal/(maxG-minG)
@@ -81,12 +87,15 @@ for i in range(numOfData) :
     yVal = int(round(percenty * sizeVal)) -1
 
     if xVal >= sizeVal : continue
-    if yVal < minY: continue
+    if yVal >= sizeVal : continue
 
-    value = eval(equation.replace("x", str(refiguredList[i][2])))
+
+    value = eval(equation.replace("a", str(refiguredList[i][2])))
 
     if X[yVal][xVal] == 0:
         X[yVal][xVal] = value
+        XChange[yVal][xVal] = False
+
         usedPosit[positCount][0] = yVal
         usedPosit[positCount][1] = xVal
         usedPosit[positCount][2] = 1
@@ -106,23 +115,30 @@ for i in range (positCount) :
 #Functions to manipulate apearance
 ################################################################
 # function replaces unfilled elements in matrix with min or max color value
-# X = fillRest(X, sizeVal, minColor, maxColor)
+# X = smooth (X, XChange ,usedPosit, positCount, sizeVal, maxColor, minColor)
 
-#
-# X = smooth (X, usedPosit, positCount, sizeVal, maxColor, minColor)
-# X = averaging (X, sizeVal)
+X = assignHighest(X, sizeVal)
+X = pseudoFill(X, sizeVal) 
+X = averaging (X, sizeVal)
+
+
 #################################################################
 
-# Will worry about the line plot after the contour
-# numOfPoints = numBin
+# numOfPoints = 20
 # iterValForPoints = int((df.shape[0]-1)/numOfPoints)
-# G = np.zeros(numOfPoints)
-# Y = np.zeros(numOfPoints)
+
+# transitionPoints = np.zeros((numOfData,2))
+
+# transitionPoints = setTranPoints (X, sizeVal,transitionPoints, minColor, maxColor)
+
+# G = transitionPoints[()][1]
+# Y =  transitionPoints[0]
+# print (transitionPoints[0:][0])
 
 
-# # for i in range(numOfPoints) : 
-# #     G[i] = df[pr.x].tolist()[(i*iterValForPoints)+1]
-# #     Y[i] = df[pr.s].tolist()[(i*iterValForPoints)+1]
+# for i in range(numOfPoints) : 
+#     G[i] = df[pr.x].tolist()[(i*iterValForPoints)+1]
+#     Y[i] = df[pr.s].tolist()[(i*iterValForPoints)+1]
 
 # for i in range(numBin-1) : 
 #     pos = listPoints[i]
@@ -130,32 +146,7 @@ for i in range (positCount) :
 #     Y[i] = refiguredList[pos][0]
 
 
-# numOfxTicks = numOfPoints
-# xticLab = [""] * numOfxTicks
-# xticVal = [0.0] * numOfxTicks
 
-# difG = maxG - minG
-# increaseFacx = difG/numOfxTicks
-# increaseFacxVal = sizeVal/numOfxTicks
-# for i in range(numOfxTicks):
-#     xticVal[i] = i*increaseFacxVal
-#     xticLab[i] = str(round((increaseFacx*i) +minG,2))
-
-
-# ######################### 
-
-# numOfyTicks = numOfPoints
-# yticLab = [""] * numOfyTicks
-# yticVal = [0.0] * numOfyTicks
-
-# difY = maxY - minY
-# increaseFacy = difY/numOfyTicks
-# increaseFacyVal = sizeVal/numOfyTicks
-# for i in range(numOfyTicks):
-#     yticVal[i] = i*increaseFacyVal
-#     yticLab[i] = str(round((increaseFacy*i) +minY,2))
-
-# ######################### 
 
 # for i in range(numOfPoints) : 
 #     G[i]-=minG
@@ -173,13 +164,18 @@ c = plt.imshow(X, cmap ='viridis',
                  extent =[minG, maxG, minY, maxY],
                     interpolation ='lanczos', origin ='lower')
                     #                 extent =[1.5, 4.5, 1.5, 3],
+                    # interpolation ='lanczos', origin ='lower')
 
 
 plt.xlabel(pr.indLab, labelpad = 5 )
 plt.ylabel(pr.depLab, labelpad= 5)
 a = plt.colorbar(c)
 a.set_label(pr.colorLab, labelpad = 10)
-  
+
+
+# plt.scatter(G,Y, color = 'white', s = 50)
+# plt.plot(G, Y, '-o', color = 'white')
+
 plt.title(pr.title)
 
 plt.show()

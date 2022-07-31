@@ -1,5 +1,27 @@
 import numpy as np
 
+def inTargetDeviation (value, target, percent):
+    dev = abs((value / target) - 1) 
+    if abs(dev - percent) < percent and abs(dev - percent) > 0:
+        print (abs(dev - percent))
+        return True
+    return False
+
+def setTranPoints (matrix, size, list, minV, maxV):
+    targetPoint = (maxV + minV) /2
+    pointsFound = 0
+    for i in range (size) :
+        for j in range (size) :
+            if inTargetDeviation (matrix[j][i], targetPoint, .05):
+                list[pointsFound][0] = j
+                list[pointsFound][1] = i
+                pointsFound+=1
+
+    return list[0:pointsFound] 
+
+
+             
+
 #y = field(t), x= temp, g = resistance
 def buildList(y, x, g, difPoints, size ) :
     composite = np.zeros((size,3))
@@ -12,9 +34,7 @@ def buildList(y, x, g, difPoints, size ) :
         if i == difPoints[iteration]:
             composite[lastVal:i] = sort(composite[lastVal:i])
             lastVal = i
-        # if composite[i][1] > 5.99: 
-        #             np.delete(composite, i)
-        #             print ("woag")
+
     return composite
 
 
@@ -74,37 +94,79 @@ def seperateLists(list, size, numBins) :
 
         
         
-
-# before
+#Cosmetic functions
 ##########################
-def fillRest(matrix, size, min, max): 
-    for i in range(size) :
-        below = True
-        for j in range(size) :
-            if not matrix[j][i] == 0: 
-                below = False
-                continue
-            if below:
-                matrix[j][i] = min
-            else: matrix[j][i] = max
+     
+
+def pseudoFill (matrix, size) :
+    for i in range (size) :
+        value = matrix[i][0]
+        above = False
+        for j in range (size) :
+            if matrix [i][j] == 0:
+                 matrix [i][j] = value
+            else :
+                value = (value + matrix [i][j])/2
+
+             
     return matrix
 
+def assignHighest (matrix, size) : 
+    for i in range (size):
+        for j in range (size):
+            highestVal = 0
+            if matrix[i][j] == 0: 
+            
+                if i > 1 and not matrix[i-1][j] ==0 :
+                    val= matrix[i-1][j]
+                    if val > highestVal : highestVal = val
+                if size - i -1 > 1 and not matrix[i+1][j] ==0:
+                    val= matrix[i+1][j]
+                    if val > highestVal : highestVal = val
 
-def spread(matrix, val, size, change, x, y, initY, max, min):
+                if j > 1 and not matrix[i][j-1] ==0:
+                    val= matrix[i][j-1]
+                    if val > highestVal : highestVal = val
+            
+                if size - j > 1 and not matrix[i][j+1] ==0:
+                    val= matrix[i][j+1]
+                    if val > highestVal : highestVal = val
+            
+                if i > 1 and j > i and not matrix[i-1][j-1] ==0 :
+                    val= matrix[i-1][j-1]
+                    if val > highestVal : highestVal = val
+
+                if size - i -1  and size - j -1 and not matrix[i+1][j+1] ==0:
+                    val= matrix[i+1][j+1]
+                    if val > highestVal : highestVal = val
+
+                if j > 1 and size - i -1 and not matrix[i+1][j-1] ==0:
+                    val= matrix[i][j-1]
+                    if val > highestVal : highestVal = val
+            
+                if j > 1 and size - j -1 and not matrix[i-1][j+1] ==0:
+                    val= matrix[i][j+1]
+                    if val > highestVal : highestVal = val
+
+                matrix[i][j] =highestVal
+    return matrix
+
+def spread(matrix, checkM, val, size, change, x, y, initY, max, min):
     if size < 0 : return matrix
-    matrix = spread(matrix, val, size -1, change, x, y+1, initY, max, min)
+    matrix = spread(matrix, checkM, val, size -1, change, x, y+1, initY, max, min)
     negY = initY + (initY - y)
 
     for i in range (2*size):
         curX = x + (i - size)
         addVal = val * pow (change, abs(i - size))
         try: # bad practice, ik
-            if not(i - size == 0 or matrix[y][curX] + addVal > max or matrix[y][curX] + addVal < min): 
+            # We do not want to change the available data, thus, we make sure pseudo data does not change range, nor pollute legitamate data
+            if not(matrix[y][curX] + addVal > max or matrix[y][curX] + addVal < min or checkM[y][curX] == False): 
                 matrix[y][curX] += addVal
         except: pass
 
         try: 
-            if not(i - size == 0 or matrix[negY][curX] + addVal > max or matrix[negY][curX] + addVal < min): 
+            if not(matrix[negY][curX] + addVal > max or matrix[negY][curX] + addVal < min or checkM[y][curX] == False): 
                 matrix[negY][curX] += addVal
         except: pass
             
@@ -153,13 +215,13 @@ def averaging (matrix, size) :
     return X
 
 
-def smooth (matrix, positions, posCount, size, max, min) :
+def smooth (matrix, checkM, positions, posCount, size, max, min) :
     for i in range (posCount):
         x = int(positions[i][0])
         y = int(positions[i][1])
         steps = int(positions[i][2] * 5)
         change = 1 -1/steps
-        matrix = spread(matrix, matrix[x][y], steps, change, y, x, x, max, min)
+        matrix = spread(matrix, checkM, matrix[x][y], steps, change, y, x, x, max, min)
     
     return matrix
 

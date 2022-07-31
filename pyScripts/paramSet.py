@@ -25,19 +25,19 @@ def getElement(event, box):
     if box == 1 :
       global indCol
       indCol = index
-      var1.set("Scatter Plot\nIndependent Value = " + str(value))
+      var1.set("Scatter Plot\nX Value = " + str(value))
     elif box == 2:
       global scatDep
       scatDep = index
-      var2.set("Scatter Plot\nDependent Value = " + str(value))
+      var2.set("Scatter Plot\nY Value = " + str(value))
     elif box == 3:
       global conInd1
       conInd1 = index
-      var3.set("Contour Plot\nParmeter x = " + str(value))
+      var3.set("Contour Plot\nParmeter a = " + str(value))
     elif box == 4:
       global conInd2
       conInd2 = index
-      var4.set("Contour Plot\nParmeter y = " + str(value))
+      var4.set("Contour Plot\nParmeter b = " + str(value))
 
 
 def submit(win):
@@ -100,14 +100,14 @@ def startPSet (data) :
   lbEnt4.bind('<<ListboxSelect>>', lambda event: getElement(event, 4))
 
 
-  lbl1 = tk.Label(window, text= "Scatter Plot\nIndependent Value", font=("8")).grid(row = 0, column= listBoxCol, padx=xspacing, pady=yspacing)
-  lbl2 = tk.Label(window, text= "Scatter Plot\nDependent Value", font=("8")).grid(row = 0, column= listBoxCol+1, padx=xspacing, pady=yspacing)
-  lbl3 = tk.Label(window, text= "Contour Plot\nParmeter x", font=("8")).grid(row = 0, column= listBoxCol+2, padx=xspacing, pady=yspacing)
-  lbl4 = tk.Label(window, text= "Contour Plot\nParmeter y", font=("2")).grid(row = 0, column= listBoxCol+3, padx=xspacing, pady=yspacing)
+  lbl1 = tk.Label(window, text= "Scatter Plot\nX axis data values", font=("8")).grid(row = 0, column= listBoxCol, padx=xspacing, pady=yspacing)
+  lbl2 = tk.Label(window, text= "Scatter Plot\nY axis data values", font=("8")).grid(row = 0, column= listBoxCol+1, padx=xspacing, pady=yspacing)
+  lbl3 = tk.Label(window, text= "Contour Plot\nParmeter a", font=("8")).grid(row = 0, column= listBoxCol+2, padx=xspacing, pady=yspacing)
+  lbl4 = tk.Label(window, text= "Contour Plot\nParmeter b", font=("2")).grid(row = 0, column= listBoxCol+3, padx=xspacing, pady=yspacing)
 
 
   contELbl = tk.Label(window, text= "Contour Function Equation", font=("2")).grid(row = 0, column= endCol, padx=xspacing, pady=yspacing)
-  contELbl2 = tk.Label(window, text= "Enter an equation for the contour plot.\nExample : x/y", font=("6")).grid(row = 1, column= endCol, padx=xspacing)
+  contELbl2 = tk.Label(window, text= "Enter an equation for the contour plot.\nExample : a/b", font=("6")).grid(row = 1, column= endCol, padx=xspacing)
 
   eqVar=tk.StringVar()
   inputeqVar = tk.Entry(window,textvariable=eqVar).grid(row = 2, column=endCol, padx=xspacing, pady=yspacing)
@@ -141,6 +141,19 @@ def startPSet (data) :
   window.mainloop()
   
   equ = eqVar.get()
+  if not 'conInd1' in globals():
+    global conInd1
+    conInd1 = 'X'
+
+  if not 'conInd2' in globals():
+    global conInd2
+    conInd2 = 'X'
+  
+  if not 'indCol' in globals():
+    raise ("There must to be a value associated with the X axis")
+
+
+    
   rval = ParamReturn(indCol,scatDep,conInd1,conInd2,eqVar.get(),sizeVar.get(),titleVar.get(),indVarGraphLabel.get(),depVarGraphLabel.get(),cVarGraphLabel.get(), printVar.get())
   return rval
 
