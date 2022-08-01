@@ -19,7 +19,6 @@ def setTranPoints (matrix, size, list, minV, maxV):
 
     return list[0:pointsFound] 
 
-
              
 
 #y = field(t), x= temp, g = resistance
