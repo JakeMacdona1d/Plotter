@@ -31,24 +31,22 @@ minColor = 10000000
 # for i in range(sizeVal) :
 maxColor = getMax( df[pr.c1].tolist()[1:])
 minColor = getMin( df[pr.c1].tolist()[1:])
-minY = getMin(df[pr.s].tolist()[1:])
-maxY = getMax(df[pr.s].tolist()[1:])
-minG = getMin(df[pr.x].tolist()[1:])
-maxG = getMax(df[pr.x].tolist()[1:])
+miny = getMin(df[pr.s].tolist()[1:])
+maxy = getMax(df[pr.s].tolist()[1:])
+minx = getMin(df[pr.x].tolist()[1:])
+maxx = getMax(df[pr.x].tolist()[1:])
 
 #overestimates number of bins
-numBin = int(round((maxG - minG)/0.25))
+numBin = int(round((maxx - minx)/0.25))
 
 #For the data I am using, this makes things better
 # Will incorporate into UI later
-maxG = 4.5
-minG = 2
-minY = 1.9
-maxY = 4.5
+maxx = 4.5
+minx = 2
+miny = 1.9
+maxy = 4.5
 
 numOfData = int((df.shape[0]-1))
-
-# if numBin> sizeVal : numBin = sizeVal
 
 listPoints =  seperateLists(df[pr.s].tolist()[1:], numOfData, numBin) 
 
@@ -72,18 +70,17 @@ for i in range(numOfData) :
     xVal = refiguredList[i][1]
     yVal = refiguredList[i][0]
 
-    
+    # Do not want points outside set scope
+    if xVal < minx : continue
+    if yVal < miny: continue
+    if xVal > maxx : continue
+    if yVal > maxy: continue
 
-    if xVal < minG : continue
-    if yVal < minY: continue
-    if xVal > maxG : continue
-    if yVal > maxY: continue
-
-    xVal-=minG
-    yVal-=minY
-    percentX = xVal/(maxG-minG)
+    xVal-=minx
+    yVal-=miny
+    percentX = xVal/(maxx-minx)
     xVal= int(round(percentX * sizeVal)) -1
-    percenty = yVal/(maxY-minY)
+    percenty = yVal/(maxy-miny)
     yVal = int(round(percenty * sizeVal)) -1
 
     if xVal >= sizeVal : continue
@@ -121,51 +118,55 @@ X = assignHighest(X, sizeVal)
 X = pseudoFill(X, sizeVal) 
 X = averaging (X, sizeVal)
 
-
 #################################################################
 
 # numOfPoints = 20
 # iterValForPoints = int((df.shape[0]-1)/numOfPoints)
-
 # transitionPoints = np.zeros((numOfData,2))
-
 # transitionPoints = setTranPoints (X, sizeVal,transitionPoints, minColor, maxColor)
 
-# G = transitionPoints[()][1]
-# Y =  transitionPoints[0]
-# print (transitionPoints[0:][0])
+G = np.zeros(sizeVal)
+Y = np.zeros(sizeVal)
+
+devAccept = .05
+targetPoint = (maxColor + minColor) /2
+pointsFound = 0
+
+for i in range (sizeVal) :
+    for j in range (sizeVal) :
+        if inTargetDeviation (X[j][i], targetPoint, devAccept):
+            G[i] = i
+            Y[i] = j
+            pointsFound+=1
+
+yrange = maxy - miny
+
+minY = getMin(Y[1:])
+maxY = getMax(Y[1:])
+minG = getMin(G[1:])
+maxG = getMax(G[1:])
 
 
-# for i in range(numOfPoints) : 
-#     G[i] = df[pr.x].tolist()[(i*iterValForPoints)+1]
-#     Y[i] = df[pr.s].tolist()[(i*iterValForPoints)+1]
-
-# for i in range(numBin-1) : 
-#     pos = listPoints[i]
-#     G[i] = refiguredList[pos][1]
-#     Y[i] = refiguredList[pos][0]
+Yrange = maxY - minY
+Yscale = yrange/Yrange
+xrange = maxx - minx
+Grange = maxG - minG
+Gscale = xrange/Grange
 
 
-
-
-# for i in range(numOfPoints) : 
-#     G[i]-=minG
-#     Y[i]-=minY
-
-#     percentG = G[i]/(maxG-minG)
-#     G[i] = percentG * sizeVal
-#     percentY = Y[i]/(maxY-minY)
-#     Y[i] = percentY * sizeVal
+for i in range(sizeVal) : 
+    G[i] *= Gscale
+    Y[i] *= Yscale
+    G[i] += minx
+    Y[i] += miny
 
   
 matplotlib.rcParams['font.family'] = 'Arial'
 
 c = plt.imshow(X, cmap ='viridis',
-                 extent =[minG, maxG, minY, maxY],
+                 extent =[minx, maxx, miny, maxy],
                     interpolation ='lanczos', origin ='lower')
-                    #                 extent =[1.5, 4.5, 1.5, 3],
-                    # interpolation ='lanczos', origin ='lower')
-
+                   
 
 plt.xlabel(pr.indLab, labelpad = 5 )
 plt.ylabel(pr.depLab, labelpad= 5)
@@ -173,8 +174,8 @@ a = plt.colorbar(c)
 a.set_label(pr.colorLab, labelpad = 10)
 
 
-# plt.scatter(G,Y, color = 'white', s = 50)
-# plt.plot(G, Y, '-o', color = 'white')
+plt.scatter(G,Y, color = 'white', s = 50)
+plt.plot(G, Y, '-o', color = 'black')
 
 plt.title(pr.title)
 
