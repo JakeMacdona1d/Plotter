@@ -154,13 +154,20 @@ Grange = maxG - minG
 Gscale = xrange/Grange
 
 
+# (X[j][i], targetPoint, devAccept)
 for i in range(sizeVal) : 
     G[i] *= Gscale
     Y[i] *= Yscale
     G[i] += minx
     Y[i] += miny
 
-  
+    if  inTargetDeviation(G[i], minG, 1) or inTargetDeviation(Y[i], minY, 1): 
+        print ("woag")
+        np.delete(G,i)
+        np.delete(Y,i)
+    
+
+
 matplotlib.rcParams['font.family'] = 'Arial'
 
 c = plt.imshow(X, cmap ='viridis',
