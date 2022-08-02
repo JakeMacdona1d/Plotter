@@ -1,2 +1,3 @@
 # Plotter
-Currently,  all parameter fields must be given a value. 
+Hello!
+I do not fashion the data in this public repository for that would be disliked. 

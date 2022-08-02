@@ -1,14 +1,16 @@
-from tracemalloc import start
-import matplotlib
+# Jake Macdonald, 8/2/2022
+# This program serves as a means to rapidly plot
+# superconducting transitions within a data set.
+# Was primarily developed for use by LabEQ, a research 
+# organization studying quantum systems @ Clemson University.  
+
 import numpy as np
 from numpy import *
 import matplotlib.pyplot as plt
-
 from fileSelect import startSel
-from paramSet import startPSet,ParamReturn
+from paramSet import startPSet
 from functions import *
 
-import math
 
 df = startSel()
 pr = startPSet(df)
@@ -26,7 +28,6 @@ equation = pr.equ
 
 maxColor = -1000000
 minColor = 10000000
-# for i in range(sizeVal) :
 maxColor = getMax( df[pr.c1].tolist()[1:])
 minColor = getMin( df[pr.c1].tolist()[1:])
 miny = getMin(df[pr.s].tolist()[1:])
@@ -35,16 +36,22 @@ minx = getMin(df[pr.x].tolist()[1:])
 maxx = getMax(df[pr.x].tolist()[1:])
 
 #overestimates number of bins
-numBin = int(round((maxx - minx)/0.25))
+numOfData = int((df.shape[0]-1))
+numBin = numOfData
 
-#For the data I am using, this makes things better
-# Will incorporate into UI later
+
+# Reassigning value to the below variables 
+# Acts as a means to define a scope for the plot
 maxx = 4.5
 minx = 2
 miny = 1.9
 maxy = 4.5
 
-numOfData = int((df.shape[0]-1))
+# scope values for two transition data
+# maxx = 3
+# minx = 1.75
+# miny = 3.35
+# maxy = 4.6
 
 listPoints =  seperateLists(df[pr.s].tolist()[1:], numOfData, numBin) 
 
@@ -60,7 +67,6 @@ print (refiguredList)
 usedPosit = np.zeros((pow(sizeVal,2), 3))
 
 positCount = 0
-
 
 #Simply, this serves as the mapping process.
 #Assigns color value to location in graph. 
@@ -106,27 +112,29 @@ for i in range (positCount) :
     X[y][x] /= usedPosit[i][2]
 
 
-#Functions to manipulate apearance
+#Functions to manipulate apearance/ interpolating
 ################################################################
-# function replaces unfilled elements in matrix with min or max color value
 # X = smooth (X, XChange ,usedPosit, positCount, sizeVal, maxColor, minColor)
-
 X = assignHighest(X, sizeVal)
-X = pseudoFill(X, sizeVal) 
+X = pseudoFill(X, sizeVal) # Means of interpolation may need to vary per data set 
 X = averaging (X, sizeVal)
 
 #################################################################
 
+#Superconducting transition points
+#####################################################
 #Points that will even be considered. 
+
 numOfPoints = 50
 
 G = np.zeros(sizeVal)
 Y = np.zeros(sizeVal)
 
 devAccept = .05
-targetPoint = (maxColor + minColor) /2
+targetPoint = (maxColor/4)
 pointsFound = 0
 
+# Finding transition points. Only accepts points within specified deviaiton
 for i in range (sizeVal) :
     for j in range (sizeVal) :
         if inTargetDeviation (X[j][i], targetPoint, devAccept):
@@ -134,36 +142,36 @@ for i in range (sizeVal) :
             Y[i] = j
             pointsFound+=1
 
+# The point mapping process
 yrange = maxy - miny
-minY = getMin(Y[1:])
-maxY = getMax(Y[1:])
-minG = getMin(G[1:])
-maxG = getMax(G[1:])
+minY = getMin(Y)
+maxY = getMax(Y)
+minG = getMin(G)
+maxG = getMax(G)
 Yrange = maxY - minY
 Yscale = yrange/Yrange
 xrange = maxx - minx
 Grange = maxG - minG
 Gscale = xrange/Grange
 
-
 iterValForPoints = int(pointsFound/numOfPoints)
 G = reduceList(G, iterValForPoints, pointsFound, numOfPoints)
 Y = reduceList(Y, iterValForPoints, pointsFound, numOfPoints)
 
 for i in range(numOfPoints) : 
-    
     G[i] *= Gscale
     Y[i] *= Yscale
-
     G[i] += minx
     Y[i] += miny
 
-G = np.delete(G, np.where(Y == miny))
-Y = np.delete(Y, np.where(Y == miny))
+# I have found that a lot of noisy data exists on the cusps of the matrix.
+# This removes such points.
+G = np.delete(G, np.where(Y <= miny))
+Y = np.delete(Y, np.where(Y <= miny))
 
 #View
 ########################################################
-matplotlib.rcParams['font.family'] = 'Arial'
+plt.rcParams['font.family'] = 'Arial'
 
 c = plt.imshow(X, cmap ='viridis',
                  extent =[minx, maxx, miny, maxy],

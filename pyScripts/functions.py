@@ -76,15 +76,26 @@ def dirChange(list) :
 
     return True
 
+def positvieGrowthStart(list) :
+    testing = 10
+    sum = 0
+    for i in range (testing) :
+        sum += float(list[i])
+    if (sum / 10) > float(list[0]) :
+        return True
+    print ("false")
+    return False
+    
+
 def seperateLists(list, size, numBins) :
     dataSep = [0] * numBins
     seps = 0
-    positiveChange = True
+    positiveChange = positvieGrowthStart(list)
     startCheck = False
 
     sinceLast = 0
-    for i in range(size) :
-        if (round(float(list[i]),2) <= -0.499) and sinceLast > 100:
+    for i in range(size) : # -.499 because point which field typically changes growth direction
+        if (round(float(list[i]),2) <= -0.499) and sinceLast > 100: # 100 is arbitrary
             startCheck = True
         if startCheck:
             newPosChange = dirChange(list[i:])
