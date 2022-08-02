@@ -8,12 +8,10 @@ from fileSelect import startSel
 from paramSet import startPSet,ParamReturn
 from functions import *
 
-
 import math
 
 df = startSel()
 pr = startPSet(df)
-
 
 sizeVal = int(pr.size) 
 iterVal = int((df.shape[0]-1)/sizeVal)
@@ -86,7 +84,6 @@ for i in range(numOfData) :
     if xVal >= sizeVal : continue
     if yVal >= sizeVal : continue
 
-
     value = eval(equation.replace("a", str(refiguredList[i][2])))
 
     if X[yVal][xVal] == 0:
@@ -120,10 +117,8 @@ X = averaging (X, sizeVal)
 
 #################################################################
 
-# numOfPoints = 20
-# iterValForPoints = int((df.shape[0]-1)/numOfPoints)
-# transitionPoints = np.zeros((numOfData,2))
-# transitionPoints = setTranPoints (X, sizeVal,transitionPoints, minColor, maxColor)
+#Points that will even be considered. 
+numOfPoints = 50
 
 G = np.zeros(sizeVal)
 Y = np.zeros(sizeVal)
@@ -140,13 +135,10 @@ for i in range (sizeVal) :
             pointsFound+=1
 
 yrange = maxy - miny
-
 minY = getMin(Y[1:])
 maxY = getMax(Y[1:])
 minG = getMin(G[1:])
 maxG = getMax(G[1:])
-
-
 Yrange = maxY - minY
 Yscale = yrange/Yrange
 xrange = maxx - minx
@@ -154,57 +146,34 @@ Grange = maxG - minG
 Gscale = xrange/Grange
 
 
-# (X[j][i], targetPoint, devAccept)
-for i in range(sizeVal) : 
+iterValForPoints = int(pointsFound/numOfPoints)
+G = reduceList(G, iterValForPoints, pointsFound, numOfPoints)
+Y = reduceList(Y, iterValForPoints, pointsFound, numOfPoints)
+
+for i in range(numOfPoints) : 
+    
     G[i] *= Gscale
     Y[i] *= Yscale
+
     G[i] += minx
     Y[i] += miny
 
-    if  inTargetDeviation(G[i], minG, 1) or inTargetDeviation(Y[i], minY, 1): 
-        print ("woag")
-        np.delete(G,i)
-        np.delete(Y,i)
-    
+G = np.delete(G, np.where(Y == miny))
+Y = np.delete(Y, np.where(Y == miny))
 
-
+#View
+########################################################
 matplotlib.rcParams['font.family'] = 'Arial'
 
 c = plt.imshow(X, cmap ='viridis',
                  extent =[minx, maxx, miny, maxy],
                     interpolation ='lanczos', origin ='lower')
                    
-
 plt.xlabel(pr.indLab, labelpad = 5 )
 plt.ylabel(pr.depLab, labelpad= 5)
 a = plt.colorbar(c)
 a.set_label(pr.colorLab, labelpad = 10)
-
-
-plt.scatter(G,Y, color = 'white', s = 50)
-plt.plot(G, Y, '-o', color = 'black')
-
+plt.scatter(G,Y, color = 'white', s = 25)
+plt.plot(G, Y, '-o', color = 'white')
 plt.title(pr.title)
-
 plt.show()
-
-
-#color mesh achieves similar func. Imshow just holds your hand more. 
-#Imshow will deduce dimensions automatically, decide ticks, etc
-
-# plt.xlabel(pr.indLab, labelpad = 5 )
-# plt.ylabel(pr.depLab, labelpad= 5)
-# plt.xticks(xticVal,xticLab, rotation = 45)
-# plt.yticks(yticVal,yticLab)
-
-# plt.scatter(G,Y, color = 'white', s = 50)
-# plt.plot(G, Y, '-o', color = 'white')
-
-# plt.pcolormesh(X,cmap="viridis")
-# plt.title(pr.title)
-
-# a = plt.colorbar()
-# a.set_label(pr.colorLab, labelpad = 10)
-
-
-# plt.show()

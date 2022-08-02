@@ -16,12 +16,20 @@ def setTranPoints (matrix, size, list, minV, maxV):
                 list[pointsFound][0] = j
                 list[pointsFound][1] = i
                 pointsFound+=1
-
     return list[0:pointsFound] 
 
              
+def reduceList(parent, iter, curSize, targSize) :
+    child = np.zeros(targSize)
+    for i in range (curSize) :
+        if i*iter > curSize: break
+        try:
+            child[i] = parent[i*iter]
+        except: break
 
-#y = field(t), x= temp, g = resistance
+    return child
+
+
 def buildList(y, x, g, difPoints, size ) :
     composite = np.zeros((size,3))
     iteration = 0
@@ -52,6 +60,7 @@ def sort(array):
         if sorted:
             break
     return array
+
 
 #Checks when the function flips growth
 def dirChange(list) :
@@ -90,13 +99,9 @@ def seperateLists(list, size, numBins) :
 
     return dataSep
 
-
-        
-        
+          
 #Cosmetic functions
 ##########################
-     
-
 def pseudoFill (matrix, size) :
     for i in range (size) :
         value = matrix[i][0]
@@ -105,10 +110,9 @@ def pseudoFill (matrix, size) :
             if matrix [i][j] == 0:
                  matrix [i][j] = value
             else :
-                value = (value + matrix [i][j])/2
-
-             
+                value = (value + matrix [i][j])/2         
     return matrix
+
 
 def assignHighest (matrix, size) : 
     for i in range (size):
@@ -258,8 +262,6 @@ def removeOutlier (matrix, positions, posCount):
     return matrix
 
 #######################################################
-
-
 # Find deviants in pos value
 #####################################
 def findClosestVal (positions, posCount, val, target) :
